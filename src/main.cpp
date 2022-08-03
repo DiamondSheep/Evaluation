@@ -10,8 +10,8 @@ int main(){
 	if (loader.open(images_dir) == 0) {
 		std::cout << "DataLoader opened." << std::endl;
 	}
-	cv::Mat mat;
-	loader.item(mat);
-	loader.item(mat);
+	ncnn::Mat mat;
+	mat = loader.item();
+	mat = loader.item();
 	return 0; 
 }
