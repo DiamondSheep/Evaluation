@@ -21,23 +21,30 @@ public:
     typedef std::shared_ptr<Transform> ptr;
     Transform();
     Transform(const int width, const int height, 
-              const float mean[3], const float std[3]);
+              const float mean_[3], const float std_[3]);
 
     // Settings
     void set_crop_size(const int width, const int height) {
         m_width = width;
         m_height = height;
     }
-    void set_normalize(const float mean[3], const float std[3]) {
+    void set_normalize(const float mean_[3], const float std_[3]) {
         for (size_t i = 0; i < 3; ++i) {
-            m_mean[i] = mean[i];
-            m_std[i] = std[i];
+            m_mean[i] = mean_[i];
+            m_std[i] = std_[i];
         }
+        set_flag = true;
     }
     
     // Operations
     void center_crop(ncnn::Mat& mat) {
-        // TODO
+        int w = mat.w, h = mat.h;
+        int roix = (w - m_width) / 2;
+        int roiy = (h - m_height) / 2;
+        ncnn::Mat::from_pixels_roi(mat, ncnn::Mat::PIXEL_BGR, 
+                                   w, h, roix, roiy,
+                                   m_width, m_height
+                                   );
     }
     void center_crop(ncnn::Mat& mat, const int width, const int height) {
         set_crop_size(width, height);
@@ -46,21 +53,19 @@ public:
     void normalize(ncnn::Mat& mat) {
         mat.substract_mean_normalize(m_mean, m_std);
     }
-    void normalize(ncnn::Mat& mat, const float mean[3], const float std[3]) {
-        set_normalize(mean, std);
+    void normalize(ncnn::Mat& mat, const float mean_[3], const float std_[3]) {
+        set_normalize(mean_, std_);
         normalize(mat);
     }
     void transform(ncnn::Mat& ncnn_mat) {
-        std::cout << "normalize" << std::endl;
         normalize(ncnn_mat);
         std::cout << "crop" << std::endl;
         center_crop(ncnn_mat);
     }
 private:
+    bool set_flag;
     int m_width;
     int m_height;
-    int m_origin_width;
-    int m_origin_height;
 
     float m_mean[3];
     float m_std[3];
