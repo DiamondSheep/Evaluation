@@ -63,12 +63,14 @@ std::pair<ncnn::Mat, int> DataLoader::item() {
     }
     if ((m_dir_ptr = readdir(m_dir)) == NULL) {
         std::cout << "All files loaded. " << std::endl;
+        return {ncnn_mat, -1};
     }
     if(m_dir_ptr->d_name[0] == '.') {
         return item();
     }
     std::string file_name = std::string(m_source) + std::string(m_dir_ptr->d_name);
-    std::cout << file_name << std::endl;
+    //std::cout << file_name << std::endl;
+    
     // Parse label from filename
     std::size_t label_begin = file_name.find_last_of('_');
     std::size_t label_end = file_name.find_last_of('.');

@@ -22,6 +22,7 @@ public:
     void init();
     void process(const ncnn::Mat& image);
     std::vector<int> topk(int k=5);
+    std::vector<int> top5(); 
     bool isLoaded() { return is_loaded; }
 private:
     std::string m_net_name;
@@ -36,10 +37,15 @@ public:
     Evaluate(const std::string& source_dir, const std::string& net_name);
     void init();
     void process();
-    void eval_all();
+    void accumulate(const std::vector<int>& result, int);
+    float top1_accuracy() { return float(top1_accumulate) / float(m_count); }
+    float top5_accuracy() { return float(top5_accumulate) / float(m_count); }
 private:
     Network::ptr m_network;
     DataLoader m_dataloader;
+    int top1_accumulate;
+    int top5_accumulate;
+    int m_count;
 };
 } // end of namespace
 #endif
