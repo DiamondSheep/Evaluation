@@ -69,7 +69,7 @@ class DataLoader : boost::noncopyable {
 public:
     DataLoader();
     DataLoader(const std::string& source);
-    bool open(const std::string& source);
+    void open(const std::string& source);
     bool isOpened() const {
         return is_opened;
     }

@@ -47,14 +47,13 @@ DataLoader::DataLoader(const std::string& source)
     open(source);
 }
 
-bool DataLoader::open(const std::string& source) {
+void DataLoader::open(const std::string& source) {
     //double start = get_current_time();
     m_source = source;
     m_dir = opendir(m_source.c_str());
     //double end = get_current_time();
     //std::cout << "time: " << end - start << std::endl;
     is_opened = true;
-    return true;
 }
 ncnn::Mat DataLoader::item() {
     ncnn::Mat ncnn_mat;
