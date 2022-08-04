@@ -35,21 +35,13 @@ public:
         }
         set_flag = true;
     }
+    bool isSet() {
+        return set_flag;
+    }
     
     // Operations
-    void center_crop(ncnn::Mat& mat) {
-        int w = mat.w, h = mat.h;
-        int roix = (w - m_width) / 2;
-        int roiy = (h - m_height) / 2;
-        ncnn::Mat::from_pixels_roi(mat, ncnn::Mat::PIXEL_BGR, 
-                                   w, h, roix, roiy,
-                                   m_width, m_height
-                                   );
-    }
-    void center_crop(ncnn::Mat& mat, const int width, const int height) {
-        set_crop_size(width, height);
-        center_crop(mat);
-    }
+    void center_crop(ncnn::Mat& mat);
+    void center_crop(ncnn::Mat& mat, const int width, const int height);
     void normalize(ncnn::Mat& mat) {
         mat.substract_mean_normalize(m_mean, m_std);
     }
@@ -59,7 +51,9 @@ public:
     }
     void transform(ncnn::Mat& ncnn_mat) {
         normalize(ncnn_mat);
-        std::cout << "crop" << std::endl;
+        if (m_width == 0 && m_height == 0) {
+            return;
+        }
         center_crop(ncnn_mat);
     }
 private:
@@ -73,11 +67,16 @@ private:
 
 class DataLoader : boost::noncopyable {
 public:
-    //DataLoader()=default;
+    DataLoader();
+    DataLoader(const std::string& source);
     bool open(const std::string& source);
+    bool isOpened() const {
+        return is_opened;
+    }
     ncnn::Mat item();
     void set_transform(const int height, const int width, const float mean[3], const float std[3]);
 private:
+    bool is_opened;
     std::string m_source;
     DIR* m_dir;
     struct dirent* m_dir_ptr;
