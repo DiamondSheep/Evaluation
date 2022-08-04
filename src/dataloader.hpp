@@ -70,9 +70,7 @@ public:
     DataLoader();
     DataLoader(const std::string& source);
     void open(const std::string& source);
-    bool isOpened() const {
-        return is_opened;
-    }
+    bool isOpened() const { return is_opened; }
     std::pair<ncnn::Mat, int> item();
     void set_transform(const int height, const int width, const float mean[3], const float std[3]);
 private:

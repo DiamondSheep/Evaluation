@@ -68,6 +68,12 @@ std::pair<ncnn::Mat, int> DataLoader::item() {
         return item();
     }
     std::string file_name = std::string(m_source) + std::string(m_dir_ptr->d_name);
+    std::cout << file_name << std::endl;
+    // Parse label from filename
+    std::size_t label_begin = file_name.find_last_of('_');
+    std::size_t label_end = file_name.find_last_of('.');
+    int label = atoi(file_name.substr(label_begin+1, label_end - label_begin).c_str());
+    // Get image
     cv::Mat cv_mat = cv::imread(file_name.c_str(), cv::IMREAD_COLOR);
     if (!cv_mat.data) {
         std::cout << "Error: File " << file_name << " can not be read. " << std::endl;
@@ -77,7 +83,7 @@ std::pair<ncnn::Mat, int> DataLoader::item() {
     if (m_transform->isSet()) {
         m_transform->transform(ncnn_mat);
     }
-    return {ncnn_mat, 0};
+    return {ncnn_mat, label};
 }
 
 void DataLoader::set_transform(const int height, const int width, 

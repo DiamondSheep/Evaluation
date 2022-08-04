@@ -9,6 +9,8 @@ int main(){
 	std::string source_dir = "/mnt/data/dataset/imagenet/images_val/"; 
 
 	evaluate::Evaluate eval(source_dir, "squeezenet_v1.1");
-	eval.process();
+	for (int i = 0; i < 10; ++i) {
+		eval.process();
+	}
 	return 0; 
 }

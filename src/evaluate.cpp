@@ -2,7 +2,7 @@
 
 namespace evaluate {
 Network::Network(const std::string& net_name)
-: is_loaded(false), m_net_name(net_name) {
+: m_net(new ncnn::Net), is_loaded(false), m_net_name(net_name){
 	init();
 }
 void Network::init() {
@@ -10,25 +10,36 @@ void Network::init() {
 	std::string net_param_path = net_path + ".param";
 	std::string net_bin_path = net_path + ".bin";
 	// set model
-	if (m_net.load_param(net_param_path.c_str()))
+	if (m_net->load_param(net_param_path.c_str()))
         exit(-1);
-    if (m_net.load_model(net_bin_path.c_str()))
+    if (m_net->load_model(net_bin_path.c_str()))
         exit(-1);
+	m_ex.reset(new ncnn::Extractor(m_net->create_extractor()));
 	is_loaded = true;
 }
 void Network::process(const ncnn::Mat& image) {
-	std::vector<float> cls_scores;
-	ncnn::Extractor ex = m_net.create_extractor();
-	ex.input("data", image);
-
 	ncnn::Mat out;
-	ex.extract("prob", out);
+	m_ex.reset(new ncnn::Extractor(m_net->create_extractor()));
+	m_ex->input("data", image);
+	m_ex->extract("prob", out);
 	cls_scores.resize(out.w);
-    for (int j = 0; j < out.w; j++)
-    {
-        cls_scores[j] = out[j];
+    for (int i = 0; i < out.w; i++) {
+		cls_scores[i] = std::make_pair(out[i], i);
     }
-	std::cout << "Inference Done. " << std::endl;
+	std::vector<int> result = topk();
+	// TODO : compute accuracy
+}
+std::vector<int> Network::topk(int k) {
+	std::vector<int> result(k, 0);
+	std::partial_sort(cls_scores.begin(), cls_scores.begin() + k, cls_scores.end(),
+                      [](std::pair<float, int>& a, std::pair<float, int>& b){ return a.first > b.first; });
+	for (int i = 0; i < k; i++) {
+        float score = cls_scores[i].first;
+        int index = cls_scores[i].second;
+		result[i] = index;
+        fprintf(stderr, "%d = %f\n", index, score);
+    }
+	return result;
 }
 
 Evaluate::Evaluate(const std::string& source_dir, const std::string& model_name)
@@ -49,27 +60,4 @@ void Evaluate::process() {
 		m_network->process(data.first);
 	}
 }
-
-std::vector<int> Evaluate::topk(int k) {
-	/*
-	std::vector<std::pair<float, int> > vec;
-    vec.resize(size);
-    for (int i = 0; i < size; i++)
-    {
-        vec[i] = std::make_pair(cls_scores[i], i);
-    }
-
-    std::partial_sort(vec.begin(), vec.begin() + topk, vec.end(),
-                      std::greater<std::pair<float, int> >());
-
-    // print topk and score
-    for (int i = 0; i < topk; i++)
-    {
-        float score = vec[i].first;
-        int index = vec[i].second;
-        fprintf(stderr, "%d = %f\n", index, score);
-    }
-	*/
-}
-
 }
