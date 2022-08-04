@@ -73,7 +73,7 @@ public:
     bool isOpened() const {
         return is_opened;
     }
-    ncnn::Mat item();
+    std::pair<ncnn::Mat, int> item();
     void set_transform(const int height, const int width, const float mean[3], const float std[3]);
 private:
     bool is_opened;

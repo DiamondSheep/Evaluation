@@ -55,11 +55,11 @@ void DataLoader::open(const std::string& source) {
     //std::cout << "time: " << end - start << std::endl;
     is_opened = true;
 }
-ncnn::Mat DataLoader::item() {
+std::pair<ncnn::Mat, int> DataLoader::item() {
     ncnn::Mat ncnn_mat;
     if (!isOpened()) {
         std::cout << "Error: DataLoader is not opened. " << std::endl;
-        return ncnn_mat;
+        return {ncnn_mat, -1};
     }
     if ((m_dir_ptr = readdir(m_dir)) == NULL) {
         std::cout << "All files loaded. " << std::endl;
@@ -71,13 +71,13 @@ ncnn::Mat DataLoader::item() {
     cv::Mat cv_mat = cv::imread(file_name.c_str(), cv::IMREAD_COLOR);
     if (!cv_mat.data) {
         std::cout << "Error: File " << file_name << " can not be read. " << std::endl;
-        return ncnn_mat;
+        return {ncnn_mat, -1};
     }
     ncnn_mat = ncnn::Mat::from_pixels(cv_mat.data, ncnn::Mat::PIXEL_BGR, cv_mat.cols, cv_mat.rows);
     if (m_transform->isSet()) {
         m_transform->transform(ncnn_mat);
     }
-    return ncnn_mat;
+    return {ncnn_mat, 0};
 }
 
 void DataLoader::set_transform(const int height, const int width, 

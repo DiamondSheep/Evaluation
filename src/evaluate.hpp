@@ -16,11 +16,12 @@ namespace evaluate {
 class Network : boost::noncopyable {
 public:
     typedef std::shared_ptr<Network> ptr;
-    Network();
+    Network(const std::string& net_name);
     void init();
     void process(const ncnn::Mat& image);
     bool isLoaded() { return is_loaded; }
 private:
+    std::string m_net_name;
     ncnn::Net m_net;
     bool is_loaded;
 };
@@ -29,6 +30,7 @@ public:
     Evaluate(const std::string& source_dir, const std::string& net_name);
     void init();
     void process();
+    std::vector<int> topk(int k);
 private:
     Network::ptr m_network;
     DataLoader m_dataloader;
