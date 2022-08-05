@@ -53,6 +53,13 @@ void Evaluate::init() {
 	// TODO: config
 	float mean_imagenet[3] = {0.485, 0.456, 0.406};
 	float std_imagenet[3] = {0.229, 0.224, 0.225};
+	// Map to 0~255
+	for (float& item: mean_imagenet) {
+		item *= 255.0;
+	}
+	for (float& item: std_imagenet) {
+		item *= 255.0;
+	}
 	m_dataloader.set_transform(224, 224, mean_imagenet, std_imagenet);
 }
 void Evaluate::process() {
@@ -72,7 +79,7 @@ void Evaluate::process() {
 		std::vector<int> result = m_network->top5();
 		accumulate(result, label);
 		system("clear"); 
-		std::cout << "Top1: " << top1_accuracy() << ", Top5: " << top5_accuracy() << std::endl;
+		std::cout << "Top1: " << top1_accuracy() << ", Top5: " << top5_accuracy() << " count: " << m_count << std::endl;
 	}
 }
 void Evaluate::accumulate(const std::vector<int>& result, int label) {

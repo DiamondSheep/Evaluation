@@ -4,7 +4,7 @@ namespace evaluate {
 // Transform
 Transform::Transform() 
 : set_flag(false){
-    set_crop_size(0, 0);
+    set_size(0, 0);
     for (size_t i = 0; i < 3; ++i) {
         m_mean[i] = 0;
         m_std[i] = 0;
@@ -13,9 +13,21 @@ Transform::Transform()
 Transform::Transform(const int width, const int height, 
                      const float mean_[3], const float std_[3])
 : set_flag(false){
-    set_crop_size(width, height);
+    set_size(width, height);
     set_normalize(mean_, std_);
 }
+
+void Transform::resize(ncnn::Mat& mat) {
+    int w = mat.w, h = mat.h;
+    int min_size = std::min(w, h);
+    //Mat::from_pixels_resize(mat, ncnn::Mat::PIXEL_BGR, 
+    //                        width, height, w, h);
+}
+void Transform::resize(ncnn::Mat& mat, const int width, const int height) {
+    set_size(width, height);
+    resize(mat);
+}
+
 void Transform::center_crop(ncnn::Mat& mat) {
     int w = mat.w, h = mat.h;
     int roix = (w - m_width) / 2;
@@ -33,7 +45,7 @@ void Transform::center_crop(ncnn::Mat& mat) {
                                 );
 }
 void Transform::center_crop(ncnn::Mat& mat, const int width, const int height) {
-    set_crop_size(width, height);
+    set_size(width, height);
     center_crop(mat);
 }
 
@@ -70,7 +82,7 @@ std::pair<ncnn::Mat, int> DataLoader::item() {
     }
     std::string file_name = std::string(m_source) + std::string(m_dir_ptr->d_name);
     //std::cout << file_name << std::endl;
-    
+
     // Parse label from filename
     std::size_t label_begin = file_name.find_last_of('_');
     std::size_t label_end = file_name.find_last_of('.');
@@ -90,7 +102,7 @@ std::pair<ncnn::Mat, int> DataLoader::item() {
 
 void DataLoader::set_transform(const int height, const int width, 
                                const float mean_[3], const float std_[3]) {
-    m_transform->set_crop_size(width, height);
+    m_transform->set_size(width, height);
     m_transform->set_normalize(mean_, std_);
 }
 

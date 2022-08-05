@@ -24,7 +24,7 @@ public:
               const float mean_[3], const float std_[3]);
 
     // Settings
-    void set_crop_size(const int width, const int height) {
+    void set_size(const int width, const int height) {
         m_width = width;
         m_height = height;
     }
@@ -40,6 +40,8 @@ public:
     }
     
     // Operations
+    void resize(ncnn::Mat& mat);
+    void resize(ncnn::Mat& mat, const int width, const int height);
     void center_crop(ncnn::Mat& mat);
     void center_crop(ncnn::Mat& mat, const int width, const int height);
     void normalize(ncnn::Mat& mat) {
