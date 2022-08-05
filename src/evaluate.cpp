@@ -78,11 +78,14 @@ void Evaluate::process() {
 		m_network->process(image);
 		std::vector<int> result = m_network->top5();
 		accumulate(result, label);
-		system("clear"); 
-		std::cout << "Top1: " << top1_accuracy() << ", Top5: " << top5_accuracy() << " count: " << m_count << std::endl;
+		//system("clear"); 
+		std::cout << "Top1: " << top1_accuracy() << ", Top5: " << top5_accuracy() << " count: " << m_count;
 	}
 }
 void Evaluate::accumulate(const std::vector<int>& result, int label) {
+	if (label == -1) {
+		return;
+	}
 	++m_count;
 	if (result.size() == 5) {
 		auto it = std::find(result.begin(), result.end(), label);

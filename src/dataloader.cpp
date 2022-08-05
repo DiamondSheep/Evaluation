@@ -3,7 +3,7 @@
 namespace evaluate {
 // Transform
 Transform::Transform() 
-: set_flag(false){
+: set_flag(false), m_resize(1.0){
     set_size(0, 0);
     for (size_t i = 0; i < 3; ++i) {
         m_mean[i] = 0;
@@ -12,41 +12,9 @@ Transform::Transform()
 }
 Transform::Transform(const int width, const int height, 
                      const float mean_[3], const float std_[3])
-: set_flag(false){
+: set_flag(false), m_resize(1.0){
     set_size(width, height);
     set_normalize(mean_, std_);
-}
-
-void Transform::resize(ncnn::Mat& mat) {
-    int w = mat.w, h = mat.h;
-    int min_size = std::min(w, h);
-    //Mat::from_pixels_resize(mat, ncnn::Mat::PIXEL_BGR, 
-    //                        width, height, w, h);
-}
-void Transform::resize(ncnn::Mat& mat, const int width, const int height) {
-    set_size(width, height);
-    resize(mat);
-}
-
-void Transform::center_crop(ncnn::Mat& mat) {
-    int w = mat.w, h = mat.h;
-    int roix = (w - m_width) / 2;
-    int roiy = (h - m_height) / 2;
-    if (m_width <= 0 || m_width > w || m_height <= 0 || m_height > h) {
-        std::cout << "Error: Target size (" << m_width << ", " << m_height 
-                  << ") is illegal for image size (" << w << ", " << h
-                  << "). "
-                  << std::endl;
-        return;
-    }
-    ncnn::Mat::from_pixels_roi(mat, ncnn::Mat::PIXEL_BGR, 
-                                w, h, roix, roiy,
-                                m_width, m_height
-                                );
-}
-void Transform::center_crop(ncnn::Mat& mat, const int width, const int height) {
-    set_size(width, height);
-    center_crop(mat);
 }
 
 // DataLoader
@@ -93,9 +61,8 @@ std::pair<ncnn::Mat, int> DataLoader::item() {
         std::cout << "Error: File " << file_name << " can not be read. " << std::endl;
         return {ncnn_mat, -1};
     }
-    ncnn_mat = ncnn::Mat::from_pixels(cv_mat.data, ncnn::Mat::PIXEL_BGR, cv_mat.cols, cv_mat.rows);
     if (m_transform->isSet()) {
-        m_transform->transform(ncnn_mat);
+        ncnn_mat = m_transform->transform(cv_mat, 224, 224, 0.875);
     }
     return {ncnn_mat, label};
 }
