@@ -4,11 +4,17 @@
 #include <string>
 #include <fstream>
 
-int main(){ 
+int main(int argc, char* argv[]){ 
 	std::cout << " -- Project: evaluate" << std::endl; 
-	std::string source_dir = "/mnt/data/dataset/imagenet/images_val/"; 
-	//std::string source_dir = "demo/"; 
-	evaluate::Evaluate eval(source_dir, "squeezenet_v1.1");
+	if (argc != 3) {
+		std::cout << "Too less argments: " << std::endl;
+		std::cout << "./evaluate [model_name] [data_path]" << std::endl;
+		return 1;
+	}
+	std::string source_dir = argv[2];  
+	// "/mnt/data/dataset/imagenet/images_val/"; 
+	//evaluate::Evaluate eval(source_dir, argv[1]);
+	evaluate::Evaluate eval("./demo/", "squeezenet_v1.1");
 	eval.process();
 	return 0; 
 }

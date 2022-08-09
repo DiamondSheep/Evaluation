@@ -22,49 +22,16 @@ public:
     Transform();
     Transform(const int width, const int height, 
               const float mean_[3], const float std_[3]);
-
     // Settings
-    void set_size(const int width, const int height) {
-        m_width = width;
-        m_height = height;
-    }
-    void set_normalize(const float mean_[3], const float std_[3]) {
-        for (size_t i = 0; i < 3; ++i) {
-            m_mean[i] = mean_[i];
-            m_std[i] = std_[i];
-        }
-        set_flag = true;
-    }
-    bool isSet() {
-        return set_flag;
-    }
+    bool isSet() { return set_flag; }
+    void set_size(const int width, const int height);
+    void set_normalize(const float mean_[3], const float std_[3]);
     
     // Operations
-    void normalize(ncnn::Mat& mat) {
-        mat.substract_mean_normalize(m_mean, m_std);
-    }
-    void normalize(ncnn::Mat& mat, const float mean_[3], const float std_[3]) {
-        set_normalize(mean_, std_);
-        normalize(mat);
-    }
-    ncnn::Mat transform(cv::Mat& cv_mat, int target_width, int target_height, float portion=0.875) {
-        int origin_width = cv_mat.cols, origin_height = cv_mat.rows;
-        int temp_width = int(target_width / portion);
-        int temp_height = int(target_height / portion);
-        cv::Size temp_size = cv::Size(temp_width, temp_height);
-        
-        int roix = (temp_width - target_width) / 2;
-        int roiy = (temp_height - target_height) / 2;
-        int roiw = target_width, roih = target_height;
+    void normalize(ncnn::Mat& mat);
+    void normalize(ncnn::Mat& mat, const float mean_[3], const float std_[3]);
+    ncnn::Mat transform(cv::Mat& cv_mat, int target_width, int target_height, float portion=0.875);
 
-        cv::Mat cropped_mat;
-        cv::resize(cv_mat, cropped_mat, temp_size, 0, 0);
-        ncnn::Mat ncnn_mat = ncnn::Mat::from_pixels_roi_resize(cropped_mat.data, ncnn::Mat::PIXEL_RGB, 
-                                cropped_mat.cols, cropped_mat.rows, roix, roiy, roiw, roih, 
-                                target_width, target_height);
-        normalize(ncnn_mat);
-        return ncnn_mat;
-    }
 private:
     bool set_flag;
     float m_resize;
@@ -75,19 +42,57 @@ private:
     float m_std[3];
 };
 
-class DataLoader : boost::noncopyable {
+template<class DATA_TYPE, class LABEL_TYPE>
+class DataItem {
 public:
-    DataLoader();
-    DataLoader(const std::string& source);
-    void open(const std::string& source);
-    bool isOpened() const { return is_opened; }
-    std::pair<ncnn::Mat, int> item();
-    void set_transform(const int height, const int width, const float mean[3], const float std[3]);
+    typedef std::shared_ptr<DataItem> ptr;
+    DataItem(const DATA_TYPE& data, const LABEL_TYPE& label)
+    : m_data(data), m_label(label) {
+    }
+    DATA_TYPE get_data() const {
+        return m_data;
+    }
+    LABEL_TYPE get_label() const {
+        return m_label;
+    }
 private:
-    bool is_opened;
-    std::string m_source;
+    DATA_TYPE m_data;
+    LABEL_TYPE m_label;
+};
+
+template<class DATA_TYPE, class LABEL_TYPE>
+class BaseDataLoader {
+public:
+    typedef std::shared_ptr<BaseDataLoader> ptr;
+    virtual ~BaseDataLoader() {}
+    virtual void open(const std::string& source) {
+        m_source = source;
+        m_dir = opendir(m_source.c_str());
+        is_opened = true;
+    }
+    virtual typename DataItem<DATA_TYPE, LABEL_TYPE>::ptr item() = 0;
+    virtual bool load_data() = 0;
+    virtual void set_transform(const int height, const int width, const float mean[3], const float std[3]) = 0;
+
+    bool isOpened() const { return is_opened; }
+protected:
     DIR* m_dir;
-    struct dirent* m_dir_ptr;
+    struct dirent* m_dir_ptr; // for read file in dataset path
+    bool is_opened; // return true if dataset is opened
+    std::string m_source; // dataset source path
+};
+
+class ImageNetDataLoader : BaseDataLoader<ncnn::Mat, int> {
+public:
+    ImageNetDataLoader();
+    ImageNetDataLoader(const std::string& source);
+    
+    bool load_data() override;
+    DataItem<ncnn::Mat, int>::ptr item() override;
+    int label_parse(const std::string& file_name);
+    void set_transform(const int height, const int width, const float mean[3], const float std[3]) override;
+private:
+    DataItem<ncnn::Mat, int>::ptr m_item;
     Transform::ptr m_transform;
 };
 

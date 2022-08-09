@@ -42,7 +42,7 @@ public:
     float top5_accuracy() { return float(top5_accumulate) / float(m_count); }
 private:
     Network::ptr m_network;
-    DataLoader m_dataloader;
+    std::vector<std::shared_ptr<ImageNetDataLoader> > m_dataloaders;
     int top1_accumulate;
     int top5_accumulate;
     int m_count;
