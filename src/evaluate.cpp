@@ -51,24 +51,22 @@ std::vector<int> Network::top5() {
 
 Evaluate::Evaluate(const std::string& source_dir, const std::string& model_name)
 : m_network(new Network(model_name)), top1_accumulate(0.0), top5_accumulate(0.0), m_count(0) {
-	m_dataloaders.push_back(std::shared_ptr<ImageNetDataLoader>(new ImageNetDataLoader(source_dir)));
+	m_dataloader.reset(new ImageNetDataLoader(source_dir));
 	init();
 }
 void Evaluate::init() {
 	// set dataloader
 	// TODO: put into config
-	for (auto& loader: m_dataloaders) {
-		float mean_imagenet[3] = {0.485, 0.456, 0.406};
-		float std_imagenet[3] = {0.229, 0.224, 0.225};
-		// Map to 0~255
-		for (float& item: mean_imagenet) {
-			item *= 255.0;
-		}
-		for (float& item: std_imagenet) {
-			item *= 255.0;
-		}
-		loader->set_transform(224, 224, mean_imagenet, std_imagenet);
+	float mean_imagenet[3] = {0.485, 0.456, 0.406};
+	float std_imagenet[3] = {0.229, 0.224, 0.225};
+	// Map to 0~255
+	for (float& item: mean_imagenet) {
+		item *= 255.0;
 	}
+	for (float& item: std_imagenet) {
+		item *= 255.0;
+	}
+	m_dataloader->set_transform(224, 224, mean_imagenet, std_imagenet);
 }
 void Evaluate::process() {
 	DataItem<ncnn::Mat, int>::ptr data_item;
@@ -76,20 +74,18 @@ void Evaluate::process() {
 		return;
 	}
 	while (true) {
-		for (auto& loader: m_dataloaders) {
-			data_item = loader->item();
-			const ncnn::Mat& image = data_item->get_data();
-			const int label = data_item->get_label();
-			if (label == -1) {
-				std::cout << "Evaluation Done." << std::endl;
-				return;
-			}
-			m_network->process(image);
-			std::vector<int> result = m_network->top5();
-			accumulate(result, label);
-			//system("clear"); 
-			std::cout << "Top1: " << top1_accuracy() << ", Top5: " << top5_accuracy() << " count: " << m_count << std::endl;
+		data_item = m_dataloader->item();
+		if (data_item == nullptr) {
+			std::cout << "Evaluation Done." << std::endl;
+			return;
 		}
+		const ncnn::Mat& image = data_item->get_data();
+		const int label = data_item->get_label();
+		m_network->process(image);
+		std::vector<int> result = m_network->top5();
+		accumulate(result, label);
+		//system("clear"); 
+		std::cout << "Top1: " << top1_accuracy() << ", Top5: " << top5_accuracy() << " count: " << m_count << std::endl;
 	}
 }
 void Evaluate::accumulate(const std::vector<int>& result, int label) {

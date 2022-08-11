@@ -13,8 +13,7 @@ int main(int argc, char* argv[]){
 	}
 	std::string source_dir = argv[2];  
 	// "/mnt/data/dataset/imagenet/images_val/"; 
-	//evaluate::Evaluate eval(source_dir, argv[1]);
-	evaluate::Evaluate eval("./demo/", "squeezenet_v1.1");
+	evaluate::Evaluate eval(source_dir, argv[1]);
 	eval.process();
 	return 0; 
 }

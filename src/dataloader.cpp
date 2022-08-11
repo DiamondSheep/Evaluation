@@ -89,24 +89,24 @@ bool ImageNetDataLoader::load_data() {
     
     // for ./ and ../ 
     if(m_dir_ptr->d_name[0] == '.') {
-        return false;
+        return load_data();
     }
     
     // Get file name and parse label
     std::string file_name = std::string(m_source) + std::string(m_dir_ptr->d_name);
-    std::cout << "file name" << std::endl;
     int label = label_parse(file_name);
     
-    // Get image
+    // Get image and check
     cv::Mat cv_mat = cv::imread(file_name.c_str(), cv::IMREAD_COLOR);
-
-    // Check image
     if (!cv_mat.data) {
         std::cout << "Error: File " << file_name << " can not be read. " << std::endl;
         return false;
     }
+
     // Image transformation
     ncnn::Mat ncnn_mat = m_transform->transform(cv_mat, 224, 224, 0.875);
+
+    // Load to item
     m_item.reset(new DataItem<ncnn::Mat, int>(ncnn_mat, label));
     return true;
 }
@@ -117,7 +117,8 @@ typename DataItem<ncnn::Mat, int>::ptr ImageNetDataLoader::item() {
         return m_item;
     }
     else {
-        std::cout << "loading failed. " << std::endl;
+        // return nullptr
+        m_item.reset();
         return m_item;
     }
 }

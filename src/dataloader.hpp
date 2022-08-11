@@ -82,6 +82,7 @@ protected:
     std::string m_source; // dataset source path
 };
 
+// Dataloader for ImageNet 
 class ImageNetDataLoader : BaseDataLoader<ncnn::Mat, int> {
 public:
     ImageNetDataLoader();
