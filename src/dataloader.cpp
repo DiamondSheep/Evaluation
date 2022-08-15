@@ -104,6 +104,7 @@ bool ImageNetDataLoader::load_data() {
     }
 
     // Image transformation
+    // TODO: move setting to config file
     ncnn::Mat ncnn_mat = m_transform->transform(cv_mat, 224, 224, 0.875);
 
     // Load to item
@@ -113,7 +114,7 @@ bool ImageNetDataLoader::load_data() {
 
 typename DataItem<ncnn::Mat, int>::ptr ImageNetDataLoader::item() {
     if (load_data()) {
-        std::cout << "data loaded. " << std::endl;
+        //std::cout << "data loaded. " << std::endl;
         return m_item;
     }
     else {

@@ -84,7 +84,7 @@ void Evaluate::process() {
 		m_network->process(image);
 		std::vector<int> result = m_network->top5();
 		accumulate(result, label);
-		//system("clear"); 
+		system("clear"); 
 		std::cout << "Top1: " << top1_accuracy() << ", Top5: " << top5_accuracy() << " count: " << m_count << std::endl;
 	}
 }
