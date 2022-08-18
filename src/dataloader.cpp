@@ -33,13 +33,17 @@ void Transform::set_normalize(const float mean_[3], const float std_[3]) {
 void Transform::normalize(ncnn::Mat& mat) {
     mat.substract_mean_normalize(m_mean, m_std);
 }
+
 void Transform::normalize(ncnn::Mat& mat, const float mean_[3], const float std_[3]) {
     set_normalize(mean_, std_);
     normalize(mat);
 }
 
 ncnn::Mat Transform::transform(cv::Mat& cv_mat, int target_width, int target_height, float portion) {
-
+    /*
+     * Take transformation on given cv_mat 
+     * to normalize, crop
+     */
     int origin_width = cv_mat.cols, origin_height = cv_mat.rows;
     int temp_width = int(target_width / portion);
     int temp_height = int(target_height / portion);
@@ -51,14 +55,16 @@ ncnn::Mat Transform::transform(cv::Mat& cv_mat, int target_width, int target_hei
 
     cv::Mat cropped_mat;
     cv::resize(cv_mat, cropped_mat, temp_size, 0, 0);
-    ncnn::Mat ncnn_mat = ncnn::Mat::from_pixels_roi_resize(cropped_mat.data, ncnn::Mat::PIXEL_RGB, 
+    ncnn::Mat ncnn_mat = ncnn::Mat::from_pixels_roi_resize(cropped_mat.data, ncnn::Mat::PIXEL_BGR, 
                             cropped_mat.cols, cropped_mat.rows, roix, roiy, roiw, roih, 
                             target_width, target_height);
-    //normalize(ncnn_mat);
+    // normalize the pixles
+    normalize(ncnn_mat);
     return ncnn_mat;
 }
 
 // ImageNetDataLoader
+
 ImageNetDataLoader::ImageNetDataLoader()
 : m_transform(new Transform()) {
     is_opened = false;
